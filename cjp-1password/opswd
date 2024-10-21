@@ -1,0 +1,38 @@
+#autoload
+
+function opswd() {
+  if [[ $# -lt 1 ]]; then
+    echo "Usage: opswd <service>"
+  fi
+
+  local service=$1
+
+  # if not logged in, print error and return
+  op user list > /dev/null || return
+
+  # search items
+  local item
+  if ! item=$(op items list | grep "$service" 2>/dev/null); then
+    echo "error: could not find service for $service"
+  fi
+
+  local vid
+  vid=$(echo -n $item | awk '{print $1}')
+
+  local title
+  title=$(echo -n $item | awk '{print $2}')
+
+  echo "Get password for $title"
+
+  # get password directory
+  local password
+  if ! password=$(op items get "$vid" --reveal --fields password 2>/dev/null); then
+    echo "error: could not obtain password for $service"
+  fi
+
+  echo -n "$password" | clipcopy
+
+  echo "✅ password for $service copied to the clipboard."
+}
+
+opswd "$@"
